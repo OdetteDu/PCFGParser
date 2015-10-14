@@ -13,8 +13,13 @@ public class PCFGParser implements Parser {
     public void train(List<Tree<String>> trainTrees) {
         // TODO: before you generate your grammar, the training trees
         // need to be binarized so that rules are at most binary
-        lexicon = new Lexicon(trainTrees);
-        grammar = new Grammar(trainTrees);
+    	List<Tree<String>> binarizedTrees = new ArrayList<Tree<String>>();
+    	for (Tree<String> tree : trainTrees)
+    	{
+    		binarizedTrees.add(TreeAnnotations.annotateTree(tree));
+    	}
+        lexicon = new Lexicon(binarizedTrees);
+        grammar = new Grammar(binarizedTrees);
     }
 
     public Tree<String> getBestParse(List<String> sentence) {
