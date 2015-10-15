@@ -2,8 +2,10 @@ package cs224n.assignment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import cs224n.ling.Tree;
 import cs224n.util.CollectionUtils;
@@ -144,6 +146,7 @@ public class Grammar {
 			new HashMap<String, List<BinaryRule>>();
 	Map<String, List<UnaryRule>> unaryRulesByChild = 
 			new HashMap<String, List<UnaryRule>>();
+	Set<String> nonTerms = new HashSet<String>();
 
 	/* Rules in grammar are indexed by child for easy access when
 	 * doing bottom up parsing. */
@@ -241,11 +244,20 @@ public class Grammar {
 	}
 
 	private UnaryRule makeUnaryRule(Tree<String> tree) {
-		return new UnaryRule(tree.getLabel(), tree.getChildren().get(0).getLabel());
+		String parent = tree.getLabel();
+		String child = tree.getChildren().get(0).getLabel();
+		nonTerms.add(parent);
+		nonTerms.add(child);
+		return new UnaryRule(parent, child);
 	}
 
 	private BinaryRule makeBinaryRule(Tree<String> tree) {
-		return new BinaryRule(tree.getLabel(), tree.getChildren().get(0).getLabel(), 
-				tree.getChildren().get(1).getLabel());
+		String parent = tree.getLabel();
+		String leftChild = tree.getChildren().get(0).getLabel();
+		String rightChild = tree.getChildren().get(1).getLabel();
+		nonTerms.add(parent);
+		nonTerms.add(leftChild);
+		nonTerms.add(rightChild);
+		return new BinaryRule(parent, leftChild, rightChild);
 	}
 }

@@ -28,6 +28,11 @@ public class Entry<T> {
 		return list.get(i);
 	}
 	
+	public int size()
+	{
+		return list.size();
+	}
+	
 	@Override
 	public String toString()
 	{
