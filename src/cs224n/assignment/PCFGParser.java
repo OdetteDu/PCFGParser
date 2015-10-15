@@ -6,7 +6,7 @@ import cs224n.ling.Tree;
 
 import java.util.*;
 
-import cs224n.util.Pair;
+import cs224n.util.Triple;
 
 /**
  * The CKY PCFG Parser you will implement.
@@ -14,6 +14,7 @@ import cs224n.util.Pair;
 public class PCFGParser implements Parser {
 	private Grammar grammar;
 	private Lexicon lexicon;
+	public static final int UNARY_INDEX = -1;
 
 	public void train(List<Tree<String>> trainTrees) {
 		List<Tree<String>> binarizedTrees = new ArrayList<Tree<String>>();
@@ -33,7 +34,7 @@ public class PCFGParser implements Parser {
 		nonTermsList.addAll(nonterms);
 
 		double[][][] score = new double[numWords + 1][numWords + 1][nonTermsList.size()];
-		Pair<String, String>[][][] back = new Pair[numWords + 1][numWords + 1][nonTermsList.size()];
+		Triple<Integer, Integer, Integer>[][][] back = new Triple[numWords + 1][numWords + 1][nonTermsList.size()];
 		for (int i=0; i<numWords; i++)
 		{
 			for (int j=0; j<nonTermsList.size(); j++)
@@ -72,7 +73,7 @@ public class PCFGParser implements Parser {
 								if (prob > score[i][i+1][a])
 								{
 									score[i][i+1][a] = prob;
-									//TODO: back[i][i+1][a] = b
+									back[i][i+1][a] = new Triple<Integer, Integer, Integer>(UNARY_INDEX, b, UNARY_INDEX);
 									added = true;
 								}
 							}
@@ -114,7 +115,7 @@ public class PCFGParser implements Parser {
 									if (prob > score[begin][end][a])
 									{
 										score[begin][end][a] = prob;
-										//TODO: back[begin][end][a] = new Triple(split, b, c);
+										back[begin][end][a] = new Triple<Integer, Integer, Integer>(split, b, c);
 									}
 								}
 							}
@@ -147,7 +148,7 @@ public class PCFGParser implements Parser {
 								if (prob > score[begin][end][a])
 								{
 									score[begin][end][a] = prob;
-									//TODO: back[begin][end][a] = b
+									back[begin][end][a] = new Triple<Integer, Integer, Integer>(UNARY_INDEX, b, UNARY_INDEX);
 									added = true;
 								}
 							}
