@@ -15,6 +15,7 @@ public class PCFGParser implements Parser {
 	private Grammar grammar;
 	private Lexicon lexicon;
 	public static final int UNARY_INDEX = -1;
+	private List<String> nonTermsList;
 
 	public void train(List<Tree<String>> trainTrees) {
 		List<Tree<String>> binarizedTrees = new ArrayList<Tree<String>>();
@@ -30,7 +31,7 @@ public class PCFGParser implements Parser {
 		int numWords = sentence.size();
 		Set<String> preTerms = lexicon.getAllTags();
 		Set<String> nonterms = grammar.nonTerms;
-		List<String> nonTermsList = new ArrayList<String>();
+		nonTermsList = new ArrayList<String>();
 		nonTermsList.addAll(nonterms);
 
 		double[][][] score = new double[numWords + 1][numWords + 1][nonTermsList.size()];
@@ -157,7 +158,33 @@ public class PCFGParser implements Parser {
 				}
 			}
 		}
-		//TODO buildTree(score, back);
+		buildTree(score, back);
+		return null;
+	}
+	
+	private Tree<String> buildTree(double[][][] score, Triple<Integer, Integer, Integer>[][][] back)
+	{
+		int indexI = 0;
+		int indexJ = score[indexI].length - 1;
+		double[] currentScore = score[indexI][indexJ];
+		int maxScoreIndex = 0;
+		for (int i=0; i<currentScore.length; i++)
+		{
+			if (currentScore[i] >= currentScore[maxScoreIndex])
+			{
+				maxScoreIndex = i;
+			}
+		}
+		
+		Triple<Integer, Integer, Integer> currentBack = back[indexI][indexJ][maxScoreIndex];
+		if (currentBack.getFirst() == -1)
+		{
+			//handle unary
+		}
+		else
+		{
+			//handle binary
+		}
 		return null;
 	}
 }
