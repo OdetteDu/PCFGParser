@@ -49,13 +49,9 @@ public class PCFGParser implements Parser {
 		Triple<Integer, Integer, Integer>[][][] back = new Triple[numWords + 1][numWords + 1][nonTermsList.size()];
 		for (int i=0; i<numWords; i++)
 		{
-			for (int j=0; j<nonTermsList.size(); j++)
+			for (String tag : preTerms)
 			{
-				String tag = nonTermsList.get(j);
-				if (preTerms.contains(tag))
-				{
-					score[i][i+1][j] = lexicon.scoreTagging(sentence.get(i), tag);
-				}
+				score[i][i+1][nonTermsListIndexMap.get(tag)] = lexicon.scoreTagging(sentence.get(i), tag);
 			}
 
 			//handle unaries
