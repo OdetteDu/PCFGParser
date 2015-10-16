@@ -144,15 +144,7 @@ public class PCFGParser implements Parser {
 	private Tree<String> buildTree(double[][][] score, Triple<Integer, Integer, Integer>[][][] back, String parentTag, int indexI, int indexJ)
 	{
 		double[] currentScore = score[indexI][indexJ];
-		int correctScoreIndex = -1;
-		for (int i=0; i<currentScore.length; i++)
-		{
-			if (nonTermsList.get(i).equals(parentTag))
-			{
-				correctScoreIndex = i;
-				break;
-			}
-		}
+		int correctScoreIndex = this.nonTermsListIndexMap.get(parentTag);
 
 		String parent = nonTermsList.get(correctScoreIndex);
 		List<Tree<String>> children = new ArrayList<Tree<String>>();
