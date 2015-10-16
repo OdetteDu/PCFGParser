@@ -141,12 +141,10 @@ public class PCFGParser implements Parser {
 		return TreeAnnotations.unAnnotateTree(tree);
 	}
 
-	private Tree<String> buildTree(double[][][] score, Triple<Integer, Integer, Integer>[][][] back, String parentTag, int indexI, int indexJ)
+	private Tree<String> buildTree(double[][][] score, Triple<Integer, Integer, Integer>[][][] back, String parent, int indexI, int indexJ)
 	{
-		double[] currentScore = score[indexI][indexJ];
-		int correctScoreIndex = this.nonTermsListIndexMap.get(parentTag);
-
-		String parent = nonTermsList.get(correctScoreIndex);
+		int correctScoreIndex = this.nonTermsListIndexMap.get(parent);
+		
 		List<Tree<String>> children = new ArrayList<Tree<String>>();
 		if (this.lexicon.getAllTags().contains(parent))
 		{
