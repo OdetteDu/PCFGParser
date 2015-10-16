@@ -91,34 +91,18 @@ public class PCFGParser implements Parser {
 				int end = begin + span;
 				for (int split = begin + 1; split <= end - 1; split ++)
 				{
-					for (int a = 0; a < nonTermsList.size(); a++)
+					for (int b = 0; b < nonTermsList.size(); b++)
 					{
-						for (int b = 0; b < nonTermsList.size(); b++)
+						List<BinaryRule> binaryRules = grammar.getBinaryRulesByLeftChild(nonTermsList.get(b));
+						for (BinaryRule rule : binaryRules)
 						{
-							for (int c = 0; c < nonTermsList.size(); c++)
+							int a = nonTermsListIndexMap.get(rule.getParent());
+							int c = nonTermsListIndexMap.get(rule.getRightChild());
+							double prob = score[begin][split][b] * score[split][end][c] *rule.getScore();
+							if (prob > score[begin][end][a])
 							{
-								List<BinaryRule> binaryRules = grammar.getBinaryRulesByLeftChild(nonTermsList.get(b));
-								BinaryRule binaryRule = null;
-								String A = nonTermsList.get(a);
-								String B = nonTermsList.get(b);
-								String C = nonTermsList.get(c);
-								for (BinaryRule rule : binaryRules)
-								{
-									if (rule.getParent().equals(A) && rule.getRightChild().equals(C))
-									{
-										binaryRule = rule;
-										break;
-									}
-								}
-								if (binaryRule != null)
-								{
-									double prob = score[begin][split][b] * score[split][end][c] *binaryRule.getScore();
-									if (prob > score[begin][end][a])
-									{
-										score[begin][end][a] = prob;
-										back[begin][end][a] = new Triple<Integer, Integer, Integer>(split, b, c);
-									}
-								}
+								score[begin][end][a] = prob;
+								back[begin][end][a] = new Triple<Integer, Integer, Integer>(split, b, c);
 							}
 						}
 					}
