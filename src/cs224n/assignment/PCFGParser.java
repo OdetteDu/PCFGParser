@@ -160,8 +160,9 @@ public class PCFGParser implements Parser {
 				}
 			}
 		}
-		buildTree(score, back, "ROOT", 0, score.length - 1, 0, score[0].length - 1);
-		return null;
+		
+		Tree<String> tree =  buildTree(score, back, "ROOT", 0, score.length - 1, 0, score[0].length - 1);
+		return TreeAnnotations.unAnnotateTree(tree);
 	}
 	
 	private Tree<String> buildTree(double[][][] score, Triple<Integer, Integer, Integer>[][][] back, String parentTag, int indexIBegin, int indexIEnd, int indexJBegin, int indexJEnd)
@@ -180,20 +181,20 @@ public class PCFGParser implements Parser {
 		}
 		
 		String parent = nonTermsList.get(correctScoreIndex);
+		List<Tree<String>> children = new ArrayList<Tree<String>>();
 		if (this.lexicon.getAllTags().contains(parent))
 		{
-			return new Tree<String>(sentence.get(indexIBegin));
+			children.add(new Tree<String>(sentence.get(indexIBegin)));
+			return new Tree<String>(parent, children);
 		}
 		
 		Triple<Integer, Integer, Integer> currentBack = back[indexI][indexJ][correctScoreIndex];
-		List<Tree<String>> children = new ArrayList<Tree<String>>();
 		if (currentBack.getFirst() == -1)
 		{
 			//handle unary
 			String child = nonTermsList.get(currentBack.getSecond());
 			//add the only child
 			children.add(buildTree(score, back, child, indexIBegin, indexIEnd, indexJBegin, indexJEnd));
-			return new Tree<String>(parent, children);
 		}
 		else
 		{
@@ -205,7 +206,7 @@ public class PCFGParser implements Parser {
 			children.add(buildTree(score, back, leftChild, indexIBegin, split, indexJBegin, split));
 			//Add right child
 			children.add(buildTree(score, back, rightChild, split, indexIEnd, split, indexJEnd));
-			return new Tree<String>(parent, children);
 		}
+		return new Tree<String>(parent, children);
 	}
 }
