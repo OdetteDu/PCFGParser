@@ -15,7 +15,9 @@ public class PCFGParser implements Parser {
 	private Grammar grammar;
 	private Lexicon lexicon;
 	public static final int UNARY_INDEX = -1;
+	private Set<String> preTerms;
 	private List<String> nonTermsList;
+	private Map<String, Integer> nonTermsListIndexMap;
 	private List<String> sentence;
 
 	public void train(List<Tree<String>> trainTrees) {
@@ -26,15 +28,21 @@ public class PCFGParser implements Parser {
 		}
 		lexicon = new Lexicon(binarizedTrees);
 		grammar = new Grammar(binarizedTrees);
+
+		preTerms = lexicon.getAllTags();
+		nonTermsList = new ArrayList<String>();
+		nonTermsList.addAll(grammar.nonTerms);
+		nonTermsListIndexMap = new HashMap<String, Integer>();
+		for (int i=0; i<nonTermsList.size(); i++)
+		{
+			nonTermsListIndexMap.put(nonTermsList.get(i), i);
+		}
 	}
 
 	public Tree<String> getBestParse(List<String> sentence) {
-		int numWords = sentence.size();
-		Set<String> preTerms = lexicon.getAllTags();
-		Set<String> nonterms = grammar.nonTerms;
-		nonTermsList = new ArrayList<String>();
-		nonTermsList.addAll(nonterms);
+
 		this.sentence = sentence;
+		int numWords = sentence.size();
 
 		double[][][] score = new double[numWords + 1][numWords + 1][nonTermsList.size()];
 		Triple<Integer, Integer, Integer>[][][] back = new Triple[numWords + 1][numWords + 1][nonTermsList.size()];
@@ -54,35 +62,25 @@ public class PCFGParser implements Parser {
 			while (added)
 			{
 				added = false;
-				for (int a=0; a<nonTermsList.size(); a++)
+				for (int b=0; b<nonTermsList.size(); b++)
 				{
-					for (int b=0; b<nonTermsList.size(); b++)
+					if (score[i][i+1][b] > 0)
 					{
-						if (score[i][i+1][b] > 0)
+						List<UnaryRule> unaryRules = grammar.getUnaryRulesByChild(nonTermsList.get(b));
+						for (UnaryRule rule : unaryRules)
 						{
-							List<UnaryRule> unaryRules = grammar.getUnaryRulesByChild(nonTermsList.get(b));
-							UnaryRule unaryRule = null;
-							for (UnaryRule rule : unaryRules)
+							double prob = rule.getScore() * score[i][i+1][b];
+							int a = nonTermsListIndexMap.get(rule.getParent());
+							if (prob > score[i][i+1][a])
 							{
-								if (rule.getParent().equals(nonTermsList.get(a)))
-								{
-									unaryRule = rule;
-									break;
-								}
-							}
-							if (unaryRule != null)
-							{
-								double prob = unaryRule.getScore() * score[i][i+1][b];
-								if (prob > score[i][i+1][a])
-								{
-									score[i][i+1][a] = prob;
-									back[i][i+1][a] = new Triple<Integer, Integer, Integer>(UNARY_INDEX, b, UNARY_INDEX);
-									added = true;
-								}
+								score[i][i+1][a] = prob;
+								back[i][i+1][a] = new Triple<Integer, Integer, Integer>(UNARY_INDEX, b, UNARY_INDEX);
+								added = true;
 							}
 						}
 					}
 				}
+
 			}
 		}
 
@@ -131,40 +129,30 @@ public class PCFGParser implements Parser {
 				while (added)
 				{
 					added = false;
-					for (int a=0; a<nonTermsList.size(); a++)
+					for (int b=0; b<nonTermsList.size(); b++)
 					{
-						for (int b=0; b<nonTermsList.size(); b++)
+						List<UnaryRule> unaryRules = grammar.getUnaryRulesByChild(nonTermsList.get(b));
+						for (UnaryRule rule : unaryRules)
 						{
-							List<UnaryRule> unaryRules = grammar.getUnaryRulesByChild(nonTermsList.get(b));
-							UnaryRule unaryRule = null;
-							for (UnaryRule rule : unaryRules)
+							double prob = rule.getScore() * score[begin][end][b];
+							int a = nonTermsListIndexMap.get(rule.getParent());
+							if (prob > score[begin][end][a])
 							{
-								if (rule.getParent().equals(nonTermsList.get(a)))
-								{
-									unaryRule = rule;
-									break;
-								}
-							}
-							if (unaryRule != null)
-							{
-								double prob = unaryRule.getScore() * score[begin][end][b];
-								if (prob > score[begin][end][a])
-								{
-									score[begin][end][a] = prob;
-									back[begin][end][a] = new Triple<Integer, Integer, Integer>(UNARY_INDEX, b, UNARY_INDEX);
-									added = true;
-								}
+								score[begin][end][a] = prob;
+								back[begin][end][a] = new Triple<Integer, Integer, Integer>(UNARY_INDEX, b, UNARY_INDEX);
+								added = true;
 							}
 						}
 					}
+
 				}
 			}
 		}
-		
+
 		Tree<String> tree =  buildTree(score, back, "ROOT", 0, score[0].length - 1);
 		return TreeAnnotations.unAnnotateTree(tree);
 	}
-	
+
 	private Tree<String> buildTree(double[][][] score, Triple<Integer, Integer, Integer>[][][] back, String parentTag, int indexI, int indexJ)
 	{
 		double[] currentScore = score[indexI][indexJ];
@@ -177,7 +165,7 @@ public class PCFGParser implements Parser {
 				break;
 			}
 		}
-		
+
 		String parent = nonTermsList.get(correctScoreIndex);
 		List<Tree<String>> children = new ArrayList<Tree<String>>();
 		if (this.lexicon.getAllTags().contains(parent))
@@ -185,7 +173,7 @@ public class PCFGParser implements Parser {
 			children.add(new Tree<String>(sentence.get(indexI)));
 			return new Tree<String>(parent, children);
 		}
-		
+
 		Triple<Integer, Integer, Integer> currentBack = back[indexI][indexJ][correctScoreIndex];
 		if (currentBack.getFirst() == -1)
 		{
