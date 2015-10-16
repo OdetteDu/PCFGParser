@@ -16,6 +16,7 @@ public class PCFGParser implements Parser {
 	private Lexicon lexicon;
 	public static final int UNARY_INDEX = -1;
 	private List<String> nonTermsList;
+	private List<String> sentence;
 
 	public void train(List<Tree<String>> trainTrees) {
 		List<Tree<String>> binarizedTrees = new ArrayList<Tree<String>>();
@@ -33,6 +34,7 @@ public class PCFGParser implements Parser {
 		Set<String> nonterms = grammar.nonTerms;
 		nonTermsList = new ArrayList<String>();
 		nonTermsList.addAll(nonterms);
+		this.sentence = sentence;
 
 		double[][][] score = new double[numWords + 1][numWords + 1][nonTermsList.size()];
 		Triple<Integer, Integer, Integer>[][][] back = new Triple[numWords + 1][numWords + 1][nonTermsList.size()];
@@ -158,33 +160,52 @@ public class PCFGParser implements Parser {
 				}
 			}
 		}
-		buildTree(score, back);
+		buildTree(score, back, "ROOT", 0, score.length - 1, 0, score[0].length - 1);
 		return null;
 	}
 	
-	private Tree<String> buildTree(double[][][] score, Triple<Integer, Integer, Integer>[][][] back)
+	private Tree<String> buildTree(double[][][] score, Triple<Integer, Integer, Integer>[][][] back, String parentTag, int indexIBegin, int indexIEnd, int indexJBegin, int indexJEnd)
 	{
-		int indexI = 0;
-		int indexJ = score[indexI].length - 1;
+		int indexI = indexIBegin;
+		int indexJ = indexJEnd;
 		double[] currentScore = score[indexI][indexJ];
-		int maxScoreIndex = 0;
+		int correctScoreIndex = -1;
 		for (int i=0; i<currentScore.length; i++)
 		{
-			if (currentScore[i] >= currentScore[maxScoreIndex])
+			if (nonTermsList.get(i).equals(parentTag))
 			{
-				maxScoreIndex = i;
+				correctScoreIndex = i;
+				break;
 			}
 		}
 		
-		Triple<Integer, Integer, Integer> currentBack = back[indexI][indexJ][maxScoreIndex];
+		String parent = nonTermsList.get(correctScoreIndex);
+		if (this.lexicon.getAllTags().contains(parent))
+		{
+			return new Tree<String>(sentence.get(indexIBegin));
+		}
+		
+		Triple<Integer, Integer, Integer> currentBack = back[indexI][indexJ][correctScoreIndex];
+		List<Tree<String>> children = new ArrayList<Tree<String>>();
 		if (currentBack.getFirst() == -1)
 		{
 			//handle unary
+			String child = nonTermsList.get(currentBack.getSecond());
+			//add the only child
+			children.add(buildTree(score, back, child, indexIBegin, indexIEnd, indexJBegin, indexJEnd));
+			return new Tree<String>(parent, children);
 		}
 		else
 		{
 			//handle binary
+			String leftChild = nonTermsList.get(currentBack.getSecond());
+			String rightChild = nonTermsList.get(currentBack.getThird());
+			int split = currentBack.getFirst();
+			//Add left child
+			children.add(buildTree(score, back, leftChild, indexIBegin, split, indexJBegin, split));
+			//Add right child
+			children.add(buildTree(score, back, rightChild, split, indexIEnd, split, indexJEnd));
+			return new Tree<String>(parent, children);
 		}
-		return null;
 	}
 }
