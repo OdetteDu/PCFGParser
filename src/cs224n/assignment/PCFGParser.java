@@ -161,14 +161,12 @@ public class PCFGParser implements Parser {
 			}
 		}
 		
-		Tree<String> tree =  buildTree(score, back, "ROOT", 0, score.length - 1, 0, score[0].length - 1);
+		Tree<String> tree =  buildTree(score, back, "ROOT", 0, score[0].length - 1);
 		return TreeAnnotations.unAnnotateTree(tree);
 	}
 	
-	private Tree<String> buildTree(double[][][] score, Triple<Integer, Integer, Integer>[][][] back, String parentTag, int indexIBegin, int indexIEnd, int indexJBegin, int indexJEnd)
+	private Tree<String> buildTree(double[][][] score, Triple<Integer, Integer, Integer>[][][] back, String parentTag, int indexI, int indexJ)
 	{
-		int indexI = indexIBegin;
-		int indexJ = indexJEnd;
 		double[] currentScore = score[indexI][indexJ];
 		int correctScoreIndex = -1;
 		for (int i=0; i<currentScore.length; i++)
@@ -184,7 +182,7 @@ public class PCFGParser implements Parser {
 		List<Tree<String>> children = new ArrayList<Tree<String>>();
 		if (this.lexicon.getAllTags().contains(parent))
 		{
-			children.add(new Tree<String>(sentence.get(indexIBegin)));
+			children.add(new Tree<String>(sentence.get(indexI)));
 			return new Tree<String>(parent, children);
 		}
 		
@@ -194,7 +192,7 @@ public class PCFGParser implements Parser {
 			//handle unary
 			String child = nonTermsList.get(currentBack.getSecond());
 			//add the only child
-			children.add(buildTree(score, back, child, indexIBegin, indexIEnd, indexJBegin, indexJEnd));
+			children.add(buildTree(score, back, child, indexI, indexJ));
 		}
 		else
 		{
@@ -203,9 +201,9 @@ public class PCFGParser implements Parser {
 			String rightChild = nonTermsList.get(currentBack.getThird());
 			int split = currentBack.getFirst();
 			//Add left child
-			children.add(buildTree(score, back, leftChild, indexIBegin, split, indexJBegin, split));
+			children.add(buildTree(score, back, leftChild, indexI, split));
 			//Add right child
-			children.add(buildTree(score, back, rightChild, split, indexIEnd, split, indexJEnd));
+			children.add(buildTree(score, back, rightChild, split, indexJ));
 		}
 		return new Tree<String>(parent, children);
 	}
