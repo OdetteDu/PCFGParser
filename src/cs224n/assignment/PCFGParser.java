@@ -41,6 +41,7 @@ public class PCFGParser implements Parser {
 
 	public Tree<String> getBestParse(List<String> sentence) {
 
+		long startTime = System.nanoTime();
 		this.sentence = sentence;
 		int numWords = sentence.size();
 
@@ -134,6 +135,9 @@ public class PCFGParser implements Parser {
 		}
 
 		Tree<String> tree =  buildTree(score, back, "ROOT", 0, score[0].length - 1);
+		long endTime = System.nanoTime();
+		double timeCost = (endTime - startTime) * 1.0 / 1000000000;
+		System.out.println("Time spent: " + timeCost);
 		return TreeAnnotations.unAnnotateTree(tree);
 	}
 
