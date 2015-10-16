@@ -37,11 +37,15 @@ public class TreeAnnotations {
 	private static void markovizeTree(Tree<String> tree, String parent)
 	{
 		String currentLabel = tree.getLabel();
-		tree.setLabel(currentLabel + "^" + parent);
+		
 		List<Tree<String>> children = tree.getChildren();
-		for (Tree<String> child : children)
+		if (!children.isEmpty())
 		{
-			markovizeTree(child, currentLabel);
+			tree.setLabel(currentLabel + "^" + parent);
+			for (Tree<String> child : children)
+			{
+				markovizeTree(child, currentLabel);
+			}
 		}
 	}
 
